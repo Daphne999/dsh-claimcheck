@@ -1,0 +1,48 @@
+{
+  "name": "dsh-claimcheck",
+  "version": "0.1.0",
+  "description": "Evidence-backed completion gate for DeepSeek Harness: runs your real project checks itself, pins results to the git state, expires stale evidence, and gates agent turn completion until proof exists.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "files": [
+    "lib/**/*.js",
+    "scripts/smoke.mjs",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "dsh-plugin",
+    "verification",
+    "evidence",
+    "acceptance",
+    "definition-of-done",
+    "completion-gate",
+    "agent-reliability"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "check": "node --check lib/index.js"
+  }
+}

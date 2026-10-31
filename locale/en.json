@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Claimcheck",
+    "description": "Runs your project checks itself, pins results to a workspace fingerprint, expires stale evidence, and reminds the agent to prove completion before claiming it."
+  }
+}

@@ -1,0 +1,7 @@
+# dsh-claimcheck bundle patch: inserts the plugin row into the profile roster.
+# The package is Host-only: it registers agent tools, a short system-prompt
+# protocol section, and a turn-completion gate. Activate with
+# `dsh plugin --profile <name> add link:<path-to-this-package>`.
+- insert:
+    - id: dsh-claimcheck
+      name: dsh-claimcheck
