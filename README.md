@@ -74,16 +74,28 @@ DSH（DeepSeek Harness）插件：由**插件自己**执行项目的验收命令
 
 插件是零依赖的 Host-only bundle（无运行时 `@deepseek-ai/*` 导入）。
 
-**方式 A · 市场/桌面端安装页**：搜索 `dsh-claimcheck` 安装。
+**方式 A · 市场/桌面端安装页**：搜索 `dsh-claimcheck` 安装（仓库带 `dsh-plugin` topic，会被社区索引自动收录）。
 
-**方式 B · 命令行**
+**方式 B · Release 离线包**（无需 clone，带 sha256）
 
 ```bash
-git clone https://github.com/<owner>/dsh-claimcheck.git
+# 下载并校验
+curl -LO https://github.com/Daphne999/dsh-claimcheck/releases/download/v0.1.0/dsh-claimcheck-0.1.0.tgz
+curl -LO https://github.com/Daphne999/dsh-claimcheck/releases/download/v0.1.0/dsh-claimcheck-0.1.0.tgz.sha256
+sha256sum -c dsh-claimcheck-0.1.0.tgz.sha256
+
+mkdir -p ~/dsh-plugins/dsh-claimcheck && tar -xzf dsh-claimcheck-0.1.0.tgz -C ~/dsh-plugins/dsh-claimcheck
+dsh plugin --profile <profile> add link:"$HOME/dsh-plugins/dsh-claimcheck"
+```
+
+**方式 C · 从源码链接**
+
+```bash
+git clone https://github.com/Daphne999/dsh-claimcheck.git
 dsh plugin --profile <profile> add link:"$PWD/dsh-claimcheck"
 ```
 
-**方式 C · 写进 profile**
+**方式 D · 写进 profile**
 
 ```jsonc
 // ~/.dsh/profiles/<profile>/package.json
@@ -174,6 +186,16 @@ node scripts/smoke.mjs        # 端到端演示：发现→过期→闸门→修
 ```
 
 零运行时依赖；纯 ESM，Node ≥ 22。
+
+## 在市场里找到它
+
+仓库已带 `dsh-plugin` topic 与项目简介，因此走社区索引的**自动收录**通道：
+
+- [awesome-dsh-plugin](https://github.com/bruc3van/awesome-dsh-plugin) 每日从 GitHub Topic 抓取快照，
+  新仓库先进入待审核队列（`data/review/pending.md`），维护者核实后进入 CATALOG 与市场文件；
+- 下游市场（桌面端「发现」页、`dsh-market`、`DSH-Plugins-Marketplace` 等）消费同一份数据；
+- 欢迎在 [SHOWCASE.md](https://github.com/bruc3van/awesome-dsh-plugin/blob/main/SHOWCASE.md) 的作者自荐区
+  推荐它（该区要求仓库 Star > 10）。
 
 ## License
 
