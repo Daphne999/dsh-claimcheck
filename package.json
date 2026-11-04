@@ -1,6 +1,6 @@
 {
   "name": "dsh-claimcheck",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Evidence-backed completion gate for DeepSeek Harness: runs your real project checks itself, pins results to the git state, expires stale evidence, and gates agent turn completion until proof exists.",
   "type": "module",
   "main": "lib/index.js",

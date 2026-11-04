@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1 — 2026-11-04
+
+修复完成闸门注入消息缺少身份字段导致的会话损坏。
+
+- 闸门提醒（`agent/turn-stopping` → `agent.followup`）现在携带 `id`（`crypto.randomUUID()`）和 `role: 'user'`，写入的 `user/message` 事件通过会话加载校验，不再导致 `stored session ... is corrupt: session event at seq N lacks an identified message` 与后续 422 `missing field role`。
+- 修复 #1。
+
 ## 0.1.0 — 2026-11-01
 
 首个公开版本。
