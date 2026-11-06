@@ -24,41 +24,63 @@ const shellProgram = detectShell()
 
 /**
  * Run a command with a real process and a bounded collector.
+ *
+ * Child stdout/stderr are redirected to files instead of pipes: a restricted
+ * DSH sandbox (workspace-write) cannot create the named pipes that
+ * `spawn(..., { stdio: 'pipe' })` needs, which shows up as `spawn EPERM` even
+ * though running the command itself is allowed.
+ *
  * @param {string} command
  * @param {{ workdir: string, timeoutMs?: number }} options
  */
-export function runReal(command, options) {
-  return new Promise((resolve) => {
-    const started = Date.now()
-    const child = spawn(shellProgram.program, [...shellProgram.args, command], {
-      cwd: options.workdir,
-      windowsHide: true,
-      env: { ...process.env, NO_COLOR: '1' },
-    })
-    /** @type {Buffer[]} */
-    const out = []
-    /** @type {Buffer[]} */
-    const err = []
-    child.stdout.on('data', (chunk) => out.push(chunk))
-    child.stderr.on('data', (chunk) => err.push(chunk))
+export async function runReal(command, options) {
+  const started = Date.now()
+  const { openSync, closeSync, readFileSync, unlinkSync } = await import('node:fs')
+  const stamp = `${process.pid}-${Math.random().toString(36).slice(2)}`
+  const outPath = join(tmpdir(), `claimcheck-out-${stamp}.log`)
+  const errPath = join(tmpdir(), `claimcheck-err-${stamp}.log`)
+  const outFd = openSync(outPath, 'w')
+  const errFd = openSync(errPath, 'w')
+  return await new Promise((resolve) => {
+    let child
+    try {
+      child = spawn(shellProgram.program, [...shellProgram.args, command], {
+        cwd: options.workdir,
+        windowsHide: true,
+        stdio: ['ignore', outFd, errFd],
+        env: { ...process.env, NO_COLOR: '1' },
+      })
+    } catch (error) {
+      try { closeSync(outFd); closeSync(errFd) } catch { /* closed */ }
+      resolve({ exitCode: null, signal: null, timedOut: false, stdout: { text: '' }, stderr: { text: String(error) }, durationMs: Date.now() - started })
+      return
+    }
+    let settled = false
     const timer = options.timeoutMs === undefined
       ? null
       : setTimeout(() => { try { child.kill() } catch { /* gone */ } }, options.timeoutMs)
-    child.on('error', (error) => {
+    const finish = (code, signal, extra) => {
+      if (settled) return
+      settled = true
       if (timer) clearTimeout(timer)
-      resolve({ exitCode: null, signal: null, timedOut: false, stdout: { text: '' }, stderr: { text: String(error) }, durationMs: Date.now() - started })
-    })
-    child.on('close', (code, signal) => {
-      if (timer) clearTimeout(timer)
+      let stdout = ''
+      let stderr = ''
+      try { stdout = readFileSync(outPath, 'utf8') } catch { /* unreadable */ }
+      try { stderr = readFileSync(errPath, 'utf8') } catch { /* unreadable */ }
+      try { closeSync(outFd); closeSync(errFd) } catch { /* closed */ }
+      try { unlinkSync(outPath) } catch { /* gone */ }
+      try { unlinkSync(errPath) } catch { /* gone */ }
       resolve({
         exitCode: code,
         signal: signal ?? null,
         timedOut: false,
-        stdout: { text: Buffer.concat(out).toString('utf8') },
-        stderr: { text: Buffer.concat(err).toString('utf8') },
+        stdout: { text: stdout },
+        stderr: { text: extra === undefined ? stderr : `${extra}${stderr}` },
         durationMs: Date.now() - started,
       })
-    })
+    }
+    child.on('error', (error) => finish(null, null, String(error)))
+    child.on('close', (code, signal) => finish(code, signal))
   })
 }
 

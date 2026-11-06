@@ -1,11 +1,14 @@
 # Changelog
 
+## 0.1.2 — 2026-11-06
+
+- 指纹忽略路径：默认跳过 `.dsh-meow/`，新增 `ignorePaths` 配置（替换默认值），git 与非 git 指纹都生效。
+  修的是「记忆库/分析产物每轮变化 → 证据被判旧 → 回合结束反复提醒」的噪声。
+- `claim_verify` 产出的证据版本号跟到 0.1.2。
+
 ## 0.1.1 — 2026-11-04
 
-修复完成闸门注入消息缺少身份字段导致的会话损坏。
-
-- 闸门提醒（`agent/turn-stopping` → `agent.followup`）现在携带 `id`（`crypto.randomUUID()`）和 `role: 'user'`，写入的 `user/message` 事件通过会话加载校验，不再导致 `stored session ... is corrupt: session event at seq N lacks an identified message` 与后续 422 `missing field role`。
-- 修复 #1。
+- 修复 `agent.followup` 缺 `id`/`role` 导致会话记录损坏的问题（GitHub issue #1）。
 
 ## 0.1.0 — 2026-11-01
 

@@ -1,7 +1,0 @@
-# Normalize line endings so the package behaves the same on every platform.
-* text=auto eol=lf
-
-*.png binary
-*.jpg binary
-*.webp binary
-*.ico binary

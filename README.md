@@ -154,7 +154,23 @@ dsh plugin --profile <profile> add link:"$PWD/dsh-claimcheck"
     evidenceDir: .dsh/claimcheck
     autoDiscover: true
     requireGateAfterWrite: true
+    ignorePaths:            # 0.1.2：这些路径的变化不算“工作区变了”
+      - .dsh-meow/          # 默认值：meow-memory 的本地库
+      - _daily/out/         # 每日流水线产出的分析报告（按需添加）
 ```
+
+### 指纹忽略路径（0.1.2）
+
+指纹只该回答“代码树还是不是跑检查时的那棵树”。本地数据目录（记忆库、缓存、每日分析产物）每轮都在变，
+却和验收结论无关；把它们算进指纹，会让证据在什么都没改的情况下过期，并在回合结束时反复提醒。
+
+0.1.2 起：
+
+- 默认忽略 `.dsh-meow/`（meow-memory 的本地库；`.dsh/` 本来就在扫描跳过列表里）；
+- 配置里的 `ignorePaths` **替换**默认值，不是追加——写 `[]` 表示谁都不忽略；
+- git 与非 git 两种指纹都生效：git 模式会先过滤 `git status` 里落在忽略前缀下的条目。
+
+前缀按“目录前缀”匹配（`notes/` 匹配 `notes/a.md`，不匹配 `notes-two/a.md`），也可以写具体文件名。
 
 ## 安全边界
 
