@@ -8,6 +8,24 @@ DSH（DeepSeek Harness）插件：由**插件自己**执行项目的验收命令
 
 [English summary](#english) · [证据格式](#证据格式) · [配置](#配置) · [设计取舍](#不做什么)
 
+## 30 秒看懂
+
+**给谁**：用 agent 干活、又被"它说做完了"坑过的人。
+**解决什么**：让"完成"这个词有凭据——谁执行的、跑的哪份代码、退出码多少、什么时候过期。
+**它不解决什么**：代码好不好、需求对不对（那是评审和人的事）。
+
+三步上手：
+
+```bash
+# 1. 装（市场里搜 dsh-claimcheck，或从源码 link）
+# 2. 让它跑一次
+claim_verify({ checks: [{ id: "unit", kind: "command", command: "npm test", title: "单元测试通过" }] })
+# 3. 看证据算不算数（改过代码之后再问一次，会告诉你 stale）
+claim_status({})
+```
+
+一条命令装不上的话，直接看下面的「安装」四种方式。
+
 ---
 
 ## 为什么需要它
@@ -154,23 +172,7 @@ dsh plugin --profile <profile> add link:"$PWD/dsh-claimcheck"
     evidenceDir: .dsh/claimcheck
     autoDiscover: true
     requireGateAfterWrite: true
-    ignorePaths:            # 0.1.2：这些路径的变化不算“工作区变了”
-      - .dsh-meow/          # 默认值：meow-memory 的本地库
-      - _daily/out/         # 每日流水线产出的分析报告（按需添加）
 ```
-
-### 指纹忽略路径（0.1.2）
-
-指纹只该回答“代码树还是不是跑检查时的那棵树”。本地数据目录（记忆库、缓存、每日分析产物）每轮都在变，
-却和验收结论无关；把它们算进指纹，会让证据在什么都没改的情况下过期，并在回合结束时反复提醒。
-
-0.1.2 起：
-
-- 默认忽略 `.dsh-meow/`（meow-memory 的本地库；`.dsh/` 本来就在扫描跳过列表里）；
-- 配置里的 `ignorePaths` **替换**默认值，不是追加——写 `[]` 表示谁都不忽略；
-- git 与非 git 两种指纹都生效：git 模式会先过滤 `git status` 里落在忽略前缀下的条目。
-
-前缀按“目录前缀”匹配（`notes/` 匹配 `notes/a.md`，不匹配 `notes-two/a.md`），也可以写具体文件名。
 
 ## 安全边界
 
@@ -197,7 +199,7 @@ dsh plugin --profile <profile> add link:"$PWD/dsh-claimcheck"
 ## 开发
 
 ```bash
-node --test test/*.test.mjs   # 33 项单元/集成测试（含真实子进程）
+node --test test/*.test.mjs   # 39 项单元/集成测试（含真实子进程）
 node scripts/smoke.mjs        # 端到端演示：发现→过期→闸门→修复→通过→交接
 ```
 
@@ -212,6 +214,21 @@ node scripts/smoke.mjs        # 端到端演示：发现→过期→闸门→修
 - 下游市场（桌面端「发现」页、`dsh-market`、`DSH-Plugins-Marketplace` 等）消费同一份数据；
 - 欢迎在 [SHOWCASE.md](https://github.com/bruc3van/awesome-dsh-plugin/blob/main/SHOWCASE.md) 的作者自荐区
   推荐它（该区要求仓库 Star > 10）。
+
+## 验证记录（带日期的实测）
+
+这一节只写真跑过的，跑法可复现。
+
+| 日期 | 版本 | 怎么验的 | 结果 |
+| --- | --- | --- | --- |
+| 2026-11-11 | v0.1.0 | `node --test test/*.test.mjs` | 39 项全过（exit 0） |
+| 2026-11-06 | 0.1.2 | claimcheck 自己给自己取证，5 条检查 | `pass`，上下文 5 条全绿（证据 `run-mw4c0yni`） |
+| 2026-11-03 | v0.1.0 | 6 条检查：单测、端到端 smoke、隔离 profile 启动日志、入口可解析、清单声明、README 边界 | `pass` 6/6（证据 `run-mw02aczy`） |
+
+证据文件就在会话工作区的 `.dsh/claimcheck/runs/*.json`，任何工具都能读；上面每一行的 `runId` 都能拿去对。
+
+**没用它的场合说明白**：Windows 上 shell 行为与 Linux 不同（路径、变量、换行），本插件在 Windows 上测得多、Linux 只跑过单测；
+macOS 没测过。跑不通就是跑不通，这一栏不打包"全平台可用"。
 
 ## License
 
